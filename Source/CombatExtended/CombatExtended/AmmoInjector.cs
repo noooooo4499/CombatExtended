@@ -152,55 +152,10 @@ namespace CombatExtended
                                 }
                             }
                             ToggleRecipeOnBench(recipe, bench);
-                            /*
-                            // Toggle recipe
-                            if (enabled)
-                            {
-                                recipe.recipeUsers.Add(bench);
-                            }
-                            else
-                            {
-                                recipe.recipeUsers.RemoveAll(x => x.defName == bench.defName);
-                            }
-                            */
                         }
                     }
                 }
             }
-            
-            /*
-        	if (canCraft)
-        	{
-            	// Set ammoCraftingStation.AllRecipes to null so it will reset
-				_allRecipesCached.SetValue(AmmoCraftingStation, null);
-				
-				// Remove all bills which contain removed ammo types
-				if (!enabled)
-				{
-                    if (Current.Game != null)
-                    {
-                        IEnumerable<Building> enumerable = Find.Maps.SelectMany(x => x.listerBuildings.AllBuildingsColonistOfDef(AmmoCraftingStation));
-                        foreach (Building current in enumerable)
-                        {
-                            var billGiver = current as IBillGiver;
-                            if (billGiver != null)
-                            {
-                                for (int i = 0; i < billGiver.BillStack.Count; i++)
-                                {
-                                    Bill bill = billGiver.BillStack[i];
-                                    if (!AmmoCraftingStation.AllRecipes.Exists(r => bill.recipe == r))
-                                    {
-                                        billGiver.BillStack.Delete(bill);
-                                    }
-                                }
-                            }
-                        }
-                    }
-					
-            		CE_Utility.allWeaponDefs.Clear();
-				}
-            }
-            */
             
             return true;
         }

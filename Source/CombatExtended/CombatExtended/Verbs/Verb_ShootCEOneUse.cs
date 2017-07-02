@@ -43,7 +43,7 @@ namespace CombatExtended
 			}
             if (inventory != null)
             {
-                var newGun = inventory.rangedWeaponList.FirstOrDefault(t => t.def == ownerEquipment.def);
+                var newGun = inventory.RangedWeaponListForReading.FirstOrDefault(t => t.def == ownerEquipment.def);
                 if (newGun != null)
                 {
                     inventory.TrySwitchToWeapon(newGun);

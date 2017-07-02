@@ -58,7 +58,7 @@ namespace CombatExtended
                 foreach (AmmoLink link in primaryammouser.Props.ammoSet.ammoTypes)
                 {
                     Thing ammoThing;
-                    ammoThing = pawn.TryGetComp<CompInventory>().ammoList.Find(thing => thing.def == link.ammo);
+                    ammoThing = pawn.TryGetComp<CompInventory>().AmmoListForReading.Find(thing => thing.def == link.ammo);
                     if (ammoThing != null)
                     {
                         ammocount += ammoThing.stackCount;
@@ -158,7 +158,7 @@ namespace CombatExtended
                     if ((pawn.skills.GetSkill(SkillDefOf.Shooting).Level >= pawn.skills.GetSkill(SkillDefOf.Melee).Level
                 	     || pawn.skills.GetSkill(SkillDefOf.Shooting).Level >= 6))
                     {
-                        ThingWithComps InvListGun3 = inventory.rangedWeaponList.Find(thing => thing.TryGetComp<CompAmmoUser>() != null && thing.TryGetComp<CompAmmoUser>().HasAmmoOrMagazine);
+                        ThingWithComps InvListGun3 = inventory.RangedWeaponListForReading.Find(thing => thing.TryGetComp<CompAmmoUser>() != null && thing.TryGetComp<CompAmmoUser>().HasAmmoOrMagazine);
                         if (InvListGun3 != null)
                         {
                             inventory.TrySwitchToWeapon(InvListGun3);
@@ -167,16 +167,16 @@ namespace CombatExtended
                 }
                 
                 // Drop excess ranged weapon
-                if (!pawn.Faction.IsPlayer && primaryammouser != null && GetPriorityWork(pawn) == WorkPriority.Unloading && inventory.rangedWeaponList.Count >= 1)
+                if (!pawn.Faction.IsPlayer && primaryammouser != null && GetPriorityWork(pawn) == WorkPriority.Unloading && inventory.RangedWeaponListForReading.Count >= 1)
                 {
-                    Thing ListGun = inventory.rangedWeaponList.Find(thing => thing.TryGetComp<CompAmmoUser>() != null && thing.def != pawn.equipment.Primary.def);
+                    Thing ListGun = inventory.RangedWeaponListForReading.Find(thing => thing.TryGetComp<CompAmmoUser>() != null && thing.def != pawn.equipment.Primary.def);
                     if (ListGun != null)
                     {
                         Thing ammoListGun = null;
                         if (!ListGun.TryGetComp<CompAmmoUser>().HasAmmoOrMagazine)
                         foreach (AmmoLink link in ListGun.TryGetComp<CompAmmoUser>().Props.ammoSet.ammoTypes)
                         {
-                            if (inventory.ammoList.Find(thing => thing.def == link.ammo) == null)
+                            if (inventory.AmmoListForReading.Find(thing => thing.def == link.ammo) == null)
                             {
                                 ammoListGun = ListGun;
                                 break;
@@ -195,22 +195,22 @@ namespace CombatExtended
                 }
                 
                 // Find and drop not need ammo from inventory
-                if (!pawn.Faction.IsPlayer && hasPrimary && inventory.ammoList.Count > 1 && GetPriorityWork(pawn) == WorkPriority.Unloading)
+                if (!pawn.Faction.IsPlayer && hasPrimary && inventory.AmmoListForReading.Count > 1 && GetPriorityWork(pawn) == WorkPriority.Unloading)
                 {
                 	Thing WrongammoThing = null;
 					WrongammoThing = primaryammouser != null
-						? inventory.ammoList.Find(thing => !primaryammouser.Props.ammoSet.ammoTypes.Any(a => a.ammo == thing.def))
-						: inventory.ammoList.RandomElement<Thing>();
+						? inventory.AmmoListForReading.Find(thing => !primaryammouser.Props.ammoSet.ammoTypes.Any(a => a.ammo == thing.def))
+						: inventory.AmmoListForReading.RandomElement<Thing>();
                     
                     if (WrongammoThing != null)
                     {
-                        Thing InvListGun = inventory.rangedWeaponList.Find(thing => hasPrimary && thing.TryGetComp<CompAmmoUser>() != null && thing.def != pawn.equipment.Primary.def);
+                        Thing InvListGun = inventory.RangedWeaponListForReading.Find(thing => hasPrimary && thing.TryGetComp<CompAmmoUser>() != null && thing.def != pawn.equipment.Primary.def);
                         if (InvListGun != null)
                         {
                             Thing ammoInvListGun = null;
                             foreach (AmmoLink link in InvListGun.TryGetComp<CompAmmoUser>().Props.ammoSet.ammoTypes)
                             {
-                                ammoInvListGun = inventory.ammoList.Find(thing => thing.def == link.ammo);
+                                ammoInvListGun = inventory.AmmoListForReading.Find(thing => thing.def == link.ammo);
                                 break;
                             }
                             if (ammoInvListGun != null && ammoInvListGun != WrongammoThing)
@@ -240,14 +240,14 @@ namespace CombatExtended
                 // Find weapon in inventory and try to switch if any ammo in inventory.
                 if (GetPriorityWork(pawn) == WorkPriority.Weapon && !hasPrimary)
                 {
-                    ThingWithComps InvListGun2 = inventory.rangedWeaponList.Find(thing => thing.TryGetComp<CompAmmoUser>() != null);
+                    ThingWithComps InvListGun2 = inventory.RangedWeaponListForReading.Find(thing => thing.TryGetComp<CompAmmoUser>() != null);
                     
                     if (InvListGun2 != null)
                     {
                         Thing ammoInvListGun2 = null;
                         foreach (AmmoLink link in InvListGun2.TryGetComp<CompAmmoUser>().Props.ammoSet.ammoTypes)
                         {
-                            ammoInvListGun2 = inventory.ammoList.Find(thing => thing.def == link.ammo);
+                            ammoInvListGun2 = inventory.AmmoListForReading.Find(thing => thing.def == link.ammo);
                             break;
                         }
                         if (ammoInvListGun2 != null)

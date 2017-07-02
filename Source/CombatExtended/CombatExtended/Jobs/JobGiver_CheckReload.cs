@@ -110,7 +110,7 @@ namespace CombatExtended
 				guns.Add(pawn.equipment.Primary);
 
             // CompInventory doesn't track equipment and it's desired to check the pawn's equipped weapon before inventory items so need to copy stuff from Inventory Cache.
-            guns.AddRange(inventory.rangedWeaponList.Where(t => t.TryGetComp<CompAmmoUser>() != null && t.GetComp<CompAmmoUser>().HasMagazine));
+            guns.AddRange(inventory.RangedWeaponListForReading.Where(t => t.TryGetComp<CompAmmoUser>() != null && t.GetComp<CompAmmoUser>().HasMagazine));
 			
 			if (guns.NullOrEmpty())
 				return false; // There isn't any work to do since the pawn doesn't have any ammo using guns.

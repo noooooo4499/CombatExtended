@@ -19,6 +19,7 @@ namespace CombatExtended
         public bool canBeDeleted = true;
         public bool defaultLoadout = false; //NOTE: assumed that there is only ever one loadout which is marked default.
         public string label;
+        public WeaponFlagData weaponFlags;
         internal int uniqueID;
         private List<LoadoutSlot> _slots = new List<LoadoutSlot>();
 

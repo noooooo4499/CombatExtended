@@ -95,7 +95,7 @@ namespace CombatExtended
         {
             get
             {
-                return CompInventory != null && CompInventory.ammoList.Any(x => Props.ammoSet.ammoTypes.Any(a => a.ammo == x.def));
+                return CompInventory != null && CompInventory.AmmoListForReading.Any(x => Props.ammoSet.ammoTypes.Any(a => a.ammo == x.def));
             }
         }
         public bool HasMagazine { get { return Props.magazineSize > 0; } }
@@ -459,7 +459,7 @@ namespace CombatExtended
             }
 
             // Try finding suitable ammoThing for currently set ammo first
-            ammoThing = CompInventory.ammoList.Find(thing => thing.def == selectedAmmo);
+            ammoThing = CompInventory.AmmoListForReading.Find(thing => thing.def == selectedAmmo);
             if (ammoThing != null)
             {
                 return true;
@@ -468,7 +468,7 @@ namespace CombatExtended
             // Try finding ammo from different type
             foreach (AmmoLink link in Props.ammoSet.ammoTypes)
             {
-                ammoThing = CompInventory.ammoList.Find(thing => thing.def == link.ammo);
+                ammoThing = CompInventory.AmmoListForReading.Find(thing => thing.def == link.ammo);
                 if (ammoThing != null)
                 {
                     selectedAmmo = (AmmoDef)link.ammo;

@@ -119,9 +119,9 @@ namespace CombatExtended
                 return null;
             }
         }
-        public List<Thing> ammoList => ammoListCached;
-        public List<ThingWithComps> meleeWeaponList => meleeWeaponListCached;
-        public List<ThingWithComps> rangedWeaponList => rangedWeaponListCached;
+        public List<Thing> AmmoListForReading => ammoListCached;
+        public List<ThingWithComps> MeleeWeaponListForReading => new List<ThingWithComps>(meleeWeaponListCached);
+        public List<ThingWithComps> RangedWeaponListForReading => new List<ThingWithComps>(rangedWeaponListCached);
 
         #endregion Properties
 

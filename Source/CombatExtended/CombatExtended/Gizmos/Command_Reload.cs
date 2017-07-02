@@ -51,7 +51,7 @@ namespace CombatExtended
                 // Iterate through all suitable ammo types and check if they're in our inventory
                 foreach (AmmoLink curLink in compAmmo.Props.ammoSet.ammoTypes)
                 {
-                    if (compAmmo.CompInventory.ammoList.Any(x => x.def == curLink.ammo))
+                    if (compAmmo.CompInventory.AmmoListForReading.Any(x => x.def == curLink.ammo))
                         ammoList.Add(curLink.ammo);
                 }
             }
