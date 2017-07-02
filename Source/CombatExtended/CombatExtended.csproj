@@ -151,6 +151,9 @@
     <Compile Include="CombatExtended\Loadouts\Tracker.cs" />
     <Compile Include="CombatExtended\Loadouts\PawnColumnWorker_Loadout.cs" />
     <Compile Include="CombatExtended\Loadouts\Utility_HoldTracker.cs" />
+    <Compile Include="CombatExtended\Loadouts\WeaponFlagData.cs" />
+    <Compile Include="CombatExtended\Loadouts\WeaponFlagUtility.cs" />
+    <Compile Include="CombatExtended\Loadouts\WeaponSwitchContext.cs" />
     <Compile Include="CombatExtended\ParryTracker.cs" />
     <Compile Include="CombatExtended\PatchOperationFindMod.cs" />
     <Compile Include="CombatExtended\PatchOperationMakeGunCECompatible.cs" />
@@ -232,6 +235,7 @@
     <Compile Include="CombatExtended\Verbs\Verb_ShootMortarCE.cs" />
     <Compile Include="CombatExtended\Verbs\Verb_ShootCEOneUse.cs" />
     <Compile Include="Harmony\Harmony-DefGenerator.cs" />
+    <Compile Include="Harmony\Harmony-DigUtility.cs" />
     <Compile Include="Harmony\Harmony-FloatMenuMakerMap.cs" />
     <Compile Include="Harmony\Harmony-GenRadial.cs" />
     <Compile Include="Harmony\Harmony-HediffComp_GetsOld.cs" />
@@ -240,6 +244,7 @@
     <Compile Include="Harmony\Harmony-Hediff_MissingPart.cs" />
     <Compile Include="Harmony\Harmony-JobDriverWait.cs" />
     <Compile Include="Harmony\Harmony-JobGiver_DropUnusedInventory.cs" />
+    <Compile Include="Harmony\Harmony-JobGiver_ReactToCloseMeleeThreat.cs" />
     <Compile Include="Harmony\Harmony-JobGiver_UnloadYourInventory.cs" />
     <Compile Include="Harmony\Harmony-MassUtility.cs" />
     <Compile Include="Harmony\Harmony-PawnInventoryGenerator.cs" />

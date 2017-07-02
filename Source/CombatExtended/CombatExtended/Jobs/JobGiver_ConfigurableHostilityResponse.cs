@@ -41,6 +41,7 @@ namespace CombatExtended
             {
                 return null;
             }
+            pawn.TrySwitchWeaponForContext(WeaponSwitchContext.HostileResponse);
             bool flag = pawn.equipment.Primary == null || pawn.equipment.Primary.def.IsMeleeWeapon;
             float num = 8f;
             if (!flag)

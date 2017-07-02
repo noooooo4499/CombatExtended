@@ -119,5 +119,11 @@ namespace CombatExtended.Harmony
             }
             return verb != null && verb.TryStartCastOn(targ, surpriseAttack, canFreeIntercept);
         }
+
+        public static void Prefix(LocalTargetInfo targ, Pawn_EquipmentTracker __instance)
+        {
+            var pawn = __instance.ParentHolder as Pawn;
+            pawn.TrySwitchWeaponForContext(WeaponFlagUtility.GetCombatContextFor(targ, pawn));
+        }
     }
 }

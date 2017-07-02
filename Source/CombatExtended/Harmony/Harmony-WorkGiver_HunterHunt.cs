@@ -12,20 +12,44 @@ namespace CombatExtended.Harmony
     [HarmonyPatch(typeof(WorkGiver_HunterHunt), "HasHuntingWeapon")]
     public class Harmony_WorkGiver_HunterHunt_HasHuntingWeapon_Patch
     {
-        public static void Postfix(ref bool __result, Pawn p)
+        public static bool Prefix(ref bool __result, Pawn p)
         {
-            if (__result)
+            __result = p.equipment.Primary != null && IsValidHuntingWeapon(p.equipment.Primary);
+
+            // Check for hunting or primary weapon we could switch to
+            var loadout = p.GetLoadout();
+            if (loadout != null)
             {
-                // Check if gun has ammo first
-                CompAmmoUser comp = p.equipment.Primary.TryGetComp<CompAmmoUser>();
-                __result = comp == null || comp.CanBeFiredNow || comp.HasAmmo;
+                var huntWeaponDef = loadout.weaponFlags.huntingWeapon == null ? loadout.weaponFlags.primaryWeapon : loadout.weaponFlags.huntingWeapon;
+                if (huntWeaponDef != null)
+                {
+                    var inventory = p.TryGetComp<CompInventory>();
+                    if (inventory != null)
+                    {
+                        __result = inventory.RangedWeaponListForReading.Concat(inventory.MeleeWeaponListForReading).Any(t => t.def == huntWeaponDef && IsValidHuntingWeapon(t));
+                    }
+                }
             }
-            else
+            return false;
+        }
+
+        private static bool IsValidHuntingWeapon(ThingWithComps weapon)
+        {
+            if (weapon.def.IsRangedWeapon)
             {
-                // Change result to true if we have melee weapon and melee hunting is allowed in settings
-                ThingWithComps eq = p.equipment.Primary;
-                __result = eq != null && Controller.settings.AllowMeleeHunting && eq.def.IsMeleeWeapon;
+                var ammoComp = weapon.TryGetComp<CompAmmoUser>();
+                return ammoComp == null || ammoComp.CanBeFiredNow || ammoComp.HasAmmo;
             }
+            return weapon.def.IsMeleeWeapon && Controller.settings.AllowMeleeHunting;
+        }
+    }
+
+    [HarmonyPatch(typeof(WorkGiver_HunterHunt), "JobOnThing")]
+    public class Harmony_WorkGiver_HunterHunt_JobOnThing
+    {
+        public static void Prefix(Pawn pawn)
+        {
+            pawn.TrySwitchWeaponForContext(WeaponSwitchContext.Hunting);
         }
     }
 }
