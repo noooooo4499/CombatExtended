@@ -196,7 +196,7 @@ namespace CombatExtended
         {
         	Loadout loadout = pawn.GetLoadout();
         	dropEquipment = null;
-        	if (loadout == null || (loadout != null && loadout.Slots.NullOrEmpty()) || pawn.equipment?.Primary == null)
+        	if (loadout == null || (loadout != null && loadout.KeepExcess) || pawn.equipment?.Primary == null)
         		return false;
         	
         	LoadoutSlot eqSlot = loadout.Slots.FirstOrDefault(s => s.count >= 1 && ((s.thingDef != null && s.thingDef == pawn.equipment.Primary.def) 
@@ -237,7 +237,7 @@ namespace CombatExtended
         		return false;
         	
         	Loadout loadout = pawn.GetLoadout();
-        	if (loadout == null || loadout.Slots.NullOrEmpty())
+        	if (loadout == null || !loadout.KeepExcess)	// Goal: Base items dropped entirely on HoldRecords
         	{
         		List<HoldRecord> recs = LoadoutManager.GetHoldRecords(pawn);
         		if (recs != null)
@@ -249,6 +249,9 @@ namespace CombatExtended
 	        			HoldRecord rec = recs.FirstOrDefault(hr => hr.thingDef == thing.def);
 	        			if (rec == null)
 	        			{
+	        				
+	        					// TODO : Migrate TakeAndEquip dropping over to here (prefer dropping "useless" items)
+	        					
 	        				// we don't have a HoldRecord for this thing, drop it.
 	        				dropThing = thing;
 	        				dropCount = numContained > dropThing.stackCount ? dropThing.stackCount : numContained;
@@ -264,6 +267,9 @@ namespace CombatExtended
 	        			}
 	        		}
         		} else {
+        			
+	        			// TODO : Migrate TakeAndEquip dropping over to here (prefer dropping "useless" items)
+	        					
         			// we have nither a HoldTracker nor a Loadout that we can ask, so just pick stuff at random from Inventory.
         			dropThing = pawn.inventory.innerContainer.RandomElement<Thing>();
         			dropCount = dropThing.stackCount;
@@ -330,7 +336,7 @@ namespace CombatExtended
         	dropThing = null;
         	dropCount = 0;
         	
-        	if (inventory == null || inventory.container == null || loadout == null || loadout.Slots.NullOrEmpty())
+        	if (inventory == null || inventory.container == null || loadout == null || loadout.KeepExcess)
         		return false;
         	
         	Dictionary<ThingDef, Integer> listing = GetStorageByThingDef(pawn);

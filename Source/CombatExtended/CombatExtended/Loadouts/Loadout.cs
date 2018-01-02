@@ -79,6 +79,19 @@ namespace CombatExtended
         public List<LoadoutSlot> Slots { get { return _slots; } }
         public float Weight { get { return _slots.Sum(slot => slot.mass * slot.count); } }
 
+        /// <summary>
+        /// <b>True</b>: TakeAndEquip enabled AND empty loadout; Don't drop excess items - TakeAndEquip will fill/empty the inventory as it sees fit (AI/Raider-like behaviour)
+        /// 
+        /// <b>False</b>: TakeAndEquip disabled / Non-empty loadout or both - dropping is performed by UpdateLoadout
+        /// </summary>
+        public bool KeepExcess
+        {
+        	get
+        	{
+        		return Controller.settings.AutoTakeAmmo && Slots.NullOrEmpty();
+        	}
+        }
+        
         #endregion Properties
 
         #region Methods

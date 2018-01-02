@@ -26,6 +26,19 @@ namespace CombatExtended
 
         #region Properties
 
+        private int nextTakeAndEquipTick = GenTicks.TicksAbs;
+        public void ExtendTakeAndEquip(int ticks = CLEANUPTICKINTERVAL)
+        {
+        	nextTakeAndEquipTick += (int)(ticks * Rand.Range(0.8f, 1.2f));	//staggers TakeAndEquip checks
+        }
+        public bool AllowTakeAndEquip
+        {
+        	get
+        	{
+        		return GenTicks.TicksAbs > nextTakeAndEquipTick;
+        	}
+        }
+        
         public CompProperties_Inventory Props
         {
             get
@@ -294,38 +307,46 @@ namespace CombatExtended
         /// Attempts to equip a weapon from the inventory, puts currently equipped weapon into inventory if it exists
         /// </summary>
         /// <param name="useFists">Whether to put the currently equipped weapon away even if no replacement is found</param>
-        public void SwitchToNextViableWeapon(bool useFists = true)
+        public bool SwitchToNextViableWeapon(bool useFists = true)
         {
             ThingWithComps newEq = null;
-
-            // Stop current job
-            if (parentPawn.jobs != null)
-                parentPawn.jobs.StopAll();
+            
+            // Check melee weapons first if the pawn is a brawler
+            if (parentPawn.story?.traits?.HasTrait(TraitDefOf.Brawler) ?? false)
+            	newEq = meleeWeaponListCached.OrderByDescending(x => x.MarketValue).FirstOrDefault();
 
             // Cycle through available ranged weapons
-            foreach (ThingWithComps gun in rangedWeaponListCached)
+            if (newEq == null)
             {
-                if (parentPawn.equipment != null && parentPawn.equipment.Primary != gun)
-                {
-                    CompAmmoUser compAmmo = gun.TryGetComp<CompAmmoUser>();
-                    if (compAmmo == null || compAmmo.HasAndUsesAmmoOrMagazine)
-                    {
-                        newEq = gun;
-                        break;
-                    }
-                }
-            }
+	            foreach (ThingWithComps gun in rangedWeaponListCached)
+	            {
+	                if (parentPawn.equipment != null && parentPawn.equipment.Primary != gun)
+	                {
+	                    CompAmmoUser compAmmo = gun.TryGetComp<CompAmmoUser>();
+	                    if (compAmmo == null || compAmmo.HasAndUsesAmmoOrMagazine)
+	                    {
+	                        newEq = gun;
+	                        break;
+	                    }
+	                }
+	            }
+       	 	}
+            
             // If no ranged weapon was found, use first available melee weapons
             if (newEq == null)
-                newEq = meleeWeaponListCached.FirstOrDefault();
+                newEq = meleeWeaponListCached.OrderByDescending(x => x.MarketValue).FirstOrDefault();
 
             // Equip the weapon
             if (newEq != null)
             {
-                TrySwitchToWeapon(newEq);
+                return TrySwitchToWeapon(newEq);
             }
             else if (useFists)
             {
+	            // Stop current job
+	            if (parentPawn.jobs != null)
+	                parentPawn.jobs.StopAll();
+	            
                 // Put away current weapon
                 ThingWithComps eq = parentPawn.equipment?.Primary;
                 if (eq != null && !parentPawn.equipment.TryTransferEquipmentToContainer(eq, container))
@@ -347,14 +368,16 @@ namespace CombatExtended
                         }
                     }
                 }
+                return true;
             }
+            return false;
         }
 
-        public void TrySwitchToWeapon(ThingWithComps newEq)
+        public bool TrySwitchToWeapon(ThingWithComps newEq)
         {
             if (newEq == null || parentPawn.equipment == null || !container.Contains(newEq))
             {
-                return;
+                return false;
             }
 
             // Stop current job
@@ -379,6 +402,8 @@ namespace CombatExtended
             parentPawn.equipment.AddEquipment((ThingWithComps)container.Take(newEq, 1));
             if (newEq.def.soundInteract != null)
                 newEq.def.soundInteract.PlayOneShot(new TargetInfo(parent.Position, parent.MapHeld, false));
+            
+            return true;
         }
 
         public override void CompTick()
