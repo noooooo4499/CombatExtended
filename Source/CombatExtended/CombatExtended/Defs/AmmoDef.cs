@@ -14,6 +14,9 @@ namespace CombatExtended
         public int defaultAmmoCount = 1;
         public float cookOffSpeed = 1f;
         public float cookOffFlashScale = 1;
+
+        public float autoignitionTemperature = 170; //degrees Celsius
+
         public ThingDef cookOffProjectile = null;
         public SoundDef cookOffSound = null;
         public SoundDef cookOffTailSound = null;

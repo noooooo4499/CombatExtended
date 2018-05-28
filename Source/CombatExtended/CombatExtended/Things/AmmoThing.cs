@@ -12,6 +12,7 @@ namespace CombatExtended
     public class AmmoThing : ThingWithComps
     {
         private int numToCookOff;
+        private bool autoignite;
 
         #region Properties
 
@@ -56,9 +57,21 @@ namespace CombatExtended
                 if (HitPoints - dinfo.Amount > 0)
                 {
                     numToCookOff += Mathf.RoundToInt(def.stackLimit * ((float)dinfo.Amount / HitPoints) * (def.smallVolume ? Rand.Range(1f, 2f) : Rand.Range(0.0f, 1f)));
+                    //(float)dinfo.Amount * (1.25f * (float)MaxHitPoints / ((float)HitPoints + 0.25f * (float)MaxHitPoints)) * ;
                 }
-                else TryDetonate(Mathf.Lerp(1, Mathf.Min(5, stackCount), stackCount / def.stackLimit));
+                else
+                {
+                    TryDetonate(Mathf.Lerp(1, Mathf.Min(5, stackCount), stackCount / def.stackLimit));
+                }
             }
+        }
+
+        public override void ExposeData()
+        {
+            base.ExposeData();
+
+            Scribe_Values.Look<int>(ref numToCookOff, "numToCookOff", 0);
+            Scribe_Values.Look<bool>(ref autoignite, "autoignite", false);
         }
 
         public override void Tick()
@@ -68,15 +81,24 @@ namespace CombatExtended
 
             base.Tick();
 
-            // Cook off ammo based on how much damage we've taken so far
-            if (numToCookOff > 0 && Rand.Chance((float)numToCookOff / def.stackLimit))
-            {
-                if(TryLaunchCookOffProjectile() || TryDetonate())
+            if (!Spawned) return;
+
+            if ((Find.TickManager.TicksAbs - this.thingIDNumber) % GenTicks.TickRareInterval == 1)
+                autoignite = Position.GetTemperature(Map) >= AmmoDef.autoignitionTemperature;
+
+            if ((autoignite && Rand.Chance(Mathf.Pow(10f, (Position.GetTemperature(Map) - AmmoDef.autoignitionTemperature) / 45f - 2.3f) / (float)GenTicks.TicksPerRealSecond))
+                || (numToCookOff > 0 && Rand.Chance((float)numToCookOff / def.stackLimit)))
+            { 
+                if (TryLaunchCookOffProjectile() || TryDetonate())
                 {
+                    GenTemperature.PushHeat(this, 6);
+                    FilthMaker.MakeFilth(Position, Map, ThingDefOf.SlagRubble);
+
                     // Reduce stack count
                     if (stackCount > 1)
                     {
-                        numToCookOff--;
+                        if (numToCookOff > 0)
+                            numToCookOff--;
                         stackCount--;
                     }
                     else
@@ -128,7 +150,7 @@ namespace CombatExtended
 
             return true;
         }
-
+        
         #endregion
     }
 }
