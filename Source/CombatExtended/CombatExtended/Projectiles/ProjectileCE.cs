@@ -417,6 +417,19 @@ namespace CombatExtended
                 ambientSustainer = def.projectile.soundAmbient.TrySpawnSustainer(info);
             }
         }
+
+        public virtual void Launch(Vector2 origin, float shotAngle, float shotRotation, float shotHeight, float shotSpeed)
+        {
+            if (launcher == null || equipmentDef == null)
+            {
+                Log.Error("CombatExtended :: Tried to Launch a ProjectileCE with method Launch(Vector2 origin, float shotAngle, float shotRotation, float shotHeight, float shotSpeed) before the projectile was properly launched.");
+                return;
+            }
+
+            var prevEq = this.equipmentDef;
+            Launch(this.launcher, origin, shotAngle, shotRotation, shotHeight, shotSpeed, null);
+            this.equipmentDef = prevEq;
+        }
         #endregion
         
         #region Collisions
@@ -767,15 +780,25 @@ namespace CombatExtended
         
         protected virtual void Impact(Thing hitThing)
         {
-            CompExplosiveCE comp = this.TryGetComp<CompExplosiveCE>();
-            if (comp != null && ExactPosition.ToIntVec3().IsValid)
+            CompExplosiveCE compExplode = this.TryGetComp<CompExplosiveCE>();
+            CompBouncyCE compBouncy = this.TryGetComp<CompBouncyCE>();
+
+            if (ExactPosition.ToIntVec3().IsValid)
             {
-                comp.Explode(launcher, ExactPosition, Find.CurrentMap);
+                if (compBouncy != null)
+                {
+                    compBouncy.Bounce(ExactPosition, Find.CurrentMap);
+                }
+
+                if (compExplode != null)
+                {
+                    compExplode.Explode(launcher, ExactPosition, Find.CurrentMap);
+                }
             }
 			
 			//Spawn things if not an explosive but preExplosionSpawnThingDef != null
             if (Controller.settings.EnableAmmoSystem
-	    		&& comp == null
+	    		&& compExplode == null
 		    	&& Position.IsValid
 				&& def.projectile.preExplosionSpawnChance > 0
 				&& def.projectile.preExplosionSpawnThingDef != null
