@@ -105,7 +105,7 @@ namespace CombatExtended
                     }
                 }
             }
-            else
+            else        //Even if a ricochet is in order, these impact sounds and graphics aren't a problem.
             {
                 SoundDefOf.BulletImpact_Ground.PlayOneShot(new TargetInfo(base.Position, map, false));
 

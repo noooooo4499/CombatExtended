@@ -7,7 +7,7 @@ using RimWorld;
 using Verse;
 using UnityEngine;
 
-namespace CombatExtended.CombatExtended.Comps
+namespace CombatExtended
 {
     //  https://www.bevfitchett.us/ballistics/ricochet-analysis-introduction.html
     //  https://books.google.nl/books?id=Y4Nvl1kan58C&pg=PA154&lpg=PA154&dq=loss+of+velocity+with+ricochet&source=bl&ots=VpQmNeXP0N&sig=dMyriHYBSetok4ZSWhmb4x0-oYo&hl=en&sa=X&ved=2ahUKEwjE1Z_-1d7eAhVLKlAKHW57An0Q6AEwEHoECAAQAQ#v=onepage&q=loss%20of%20velocity%20with%20ricochet&f=false
@@ -58,7 +58,7 @@ namespace CombatExtended.CombatExtended.Comps
      *         - McConnell, Triplett and Rowe, 1981
      *         - Hartline, Abraham and Rowe, 1982
      *         - Rathman, 1987
-     *  - Edward E. Hueske (2015). Practical Analysis and Reconstruction of Shooting Incidents, p.266-267
+     *  - Edward E. Hueske (2015). Practical Analysis and Reconstruction of Shooting Incidents
      */
 
     public class CompBouncy : ThingComp
@@ -72,29 +72,51 @@ namespace CombatExtended.CombatExtended.Comps
             }
         }
 
-        public virtual void Bounce(Vector3 pos, Map map)
+        /// <summary>
+        /// See whether a projectile at pos can bounce off of a hit thing
+        /// </summary>
+        /// <param name="hitThing"></param>
+        /// <param name="pos">The position of impact</param>
+        /// <param name="map"></param>
+        /// <returns></returns>
+        public virtual bool Bounce(Thing hitThing, Vector3 pos, Map map)
         {
             var posIV = pos.ToIntVec3();
             if (map == null)
             {
                 Log.Warning("CombatExtended :: CompBouncy.Bounce Tried to bounce in a null map.");
-                return;
+                return false;
             }
             if (!posIV.InBounds(map))
             {
                 Log.Warning("CombatExtended :: CompBouncy.Bounce Tried to bounce out of bounds");
-                return;
+                return false;
+            }
+            
+            var ricochetSpeed = projCE.shotSpeed;
+            var ricochetAngle = projCE.shotAngle;
+            var ricochetRotation = projCE.shotRotation;
+
+            /*Consider nulls when:
+                ProjectileCE.TryCollideWithRoof(success),       =>  ExactPosition is EXACTLY the raycast intersect with the roof
+                ProjectileCE.ImpactSomething(last resort)       =>  
+              Ignored:
+                ProjectileCE_Explosive.Explode(),               =>  turns into ProjectileCE.Impact(null)
+                BulletCE.Impact(hitThing=null),                 =>  turns into ProjectileCE.Impact(null)
+            */
+            if (hitThing == null)
+            {
+
             }
 
             var projCE = parent as ProjectileCE;
-
-            float momentumLoss;
+            
             float ricochetAngle;
 
             //  Impact angle ALPHA must be at or below critical angle ALPHA_crit (Hueske (2015), p.260) for ricochetting
             float criticalAngle;
             
-            //if ALPHA (relative to surface) < ALPHA_crit     ==      if THETA (relative to normal) > THETA_CRIT
+            //
             if (impactAngle <= criticalAngle)
             {
                 bool frangible;
@@ -112,10 +134,10 @@ namespace CombatExtended.CombatExtended.Comps
                 //  Harder surface => smaller ricochet angle (Hueske (2015), p.260)
                 ricochetAngle = ;
             }
+            else        //Nonyielding surface: fragment. Yielding surface: penetrate.
+            {
 
-            var shotSpeed = projCE.shotSpeed / momentumLoss;
-            var shotAngle = projCE.shotAngle;
-            var shotRotation = projCE.shotRotation;
+            }
 
             Vector3 incidentDirection = new Vector3();
 
@@ -123,8 +145,15 @@ namespace CombatExtended.CombatExtended.Comps
 
             //Perfectly elastic collision
             Vector3 reflectedDirection = Vector3.Reflect(incidentDirection, surfaceNormal);
+            
+            projCE.Launch(
+                new Vector2(pos.x, pos.z),
+                ricochetAngle,
+                ricochetRotation,
+                pos.y,
+                ricochetSpeed);
 
-            projCE.Launch(,,,,);
+            return true;
         }
     }
 }

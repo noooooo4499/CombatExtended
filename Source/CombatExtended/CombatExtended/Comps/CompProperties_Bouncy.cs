@@ -3,10 +3,20 @@ using Verse;
 using RimWorld;
 using UnityEngine;
 
-namespace CombatExtended.CombatExtended.Comps
+namespace CombatExtended
 {
-    public class CompProperties_ExplosiveCE : CompProperties
+    public class CompProperties_Bouncy : CompProperties
     {
+        MaterialFailMode materialFailMode;
+        
+        public CompProperties_Bouncy()
+        {
+            compClass = typeof(CompBouncy);
+        }
 
+        /*public override void ResolveReferences(ThingDef parentDef)
+        {
+            base.ResolveReferences(parentDef);
+        }*/
     }
 }

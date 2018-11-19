@@ -34,12 +34,12 @@ namespace CombatExtended
 			var posIV = pos.ToIntVec3();
             if (map == null)
             {
-                Log.Warning("Tried to do explodeCE in a null map.");
+                Log.Warning("CombatExtended :: CompExplosiveCE.Explode Tried to do explodeCE in a null map.");
                 return;
             }
             if (!posIV.InBounds(map))
             {
-                Log.Warning("Tried to explodeCE out of bounds");
+                Log.Warning("CombatExtended :: CompExplosiveCE.Explode Tried to explodeCE out of bounds");
                 return;
             }
 			

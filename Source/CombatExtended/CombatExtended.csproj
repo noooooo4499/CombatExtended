@@ -110,6 +110,8 @@
     <Compile Include="CombatExtended\AmmoUtility.cs" />
     <Compile Include="CombatExtended\BoundsInjector.cs" />
     <Compile Include="CombatExtended\CollisionVertical.cs" />
+    <Compile Include="CombatExtended\Comps\CompBouncy.cs" />
+    <Compile Include="CombatExtended\Comps\CompProperties_Bouncy.cs" />
     <Compile Include="CombatExtended\Comps\HediffCompProperties_Prometheum.cs" />
     <Compile Include="CombatExtended\Comps\HediffComp_Prometheum.cs" />
     <Compile Include="CombatExtended\Controller.cs" />

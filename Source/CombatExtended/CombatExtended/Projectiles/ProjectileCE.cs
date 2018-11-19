@@ -426,6 +426,18 @@ namespace CombatExtended
                 return;
             }
 
+            landed = false;
+
+            //Reinitialize everything for the ricochet
+            intTicksToImpact = -1;
+            originInt.y = -1000;
+            destinationInt.z = -1;
+            lastHeightTick = -1;
+            startingTicksToImpactInt = -1f;
+            impactPosition.Set(0f, 0f, 0f);
+            lastExactPos.x = -1000;
+            lastShotLine = -1;
+
             var prevEq = this.equipmentDef;
             Launch(this.launcher, origin, shotAngle, shotRotation, shotHeight, shotSpeed, null);
             this.equipmentDef = prevEq;
@@ -772,8 +784,18 @@ namespace CombatExtended
 						return;
 				}
             }
-            
-            ExactPosition = ExactPosition;
+
+            // Consider the terrain as the impact position (for use in CompBouncy!)
+            // TODO: At some point start considering terrains with _negative height_.
+            if (ticksToImpact <= 0)
+            {
+                ExactPosition = new Vector3(Destination.x, 0f, Destination.y);
+            }
+            else
+            {
+                ExactPosition = ExactPosition;
+            }
+
             landed = true;
             Impact(null);
         }
@@ -781,13 +803,14 @@ namespace CombatExtended
         protected virtual void Impact(Thing hitThing)
         {
             CompExplosiveCE compExplode = this.TryGetComp<CompExplosiveCE>();
-            CompBouncyCE compBouncy = this.TryGetComp<CompBouncyCE>();
+            CompBouncy compBouncy = this.TryGetComp<CompBouncy>();
 
             if (ExactPosition.ToIntVec3().IsValid)
             {
-                if (compBouncy != null)
+                if (compBouncy != null &&
+                    compBouncy.Bounce(hitThing, ExactPosition, Find.CurrentMap))
                 {
-                    compBouncy.Bounce(ExactPosition, Find.CurrentMap);
+                    return;
                 }
 
                 if (compExplode != null)
