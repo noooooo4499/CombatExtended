@@ -72,6 +72,58 @@ namespace CombatExtended
             }
         }
 
+        public bool SurfaceYields(Thing hitThing)
+        {
+            ThingDef hitStuff;
+
+            //Find material
+            if (hitThing.def.MadeFromStuff)
+            {
+                hitStuff = hitThing.Stuff;
+            }
+            else if (hitThing.def.IsStuff)
+            {
+                hitStuff = hitThing.def;
+            }
+
+            //Exceptions
+            /*
+             * 1. Pawns
+             *  1a. Mechanoids
+             *  1b. Animals
+             *  1c. Humans
+             */
+            
+
+
+            return true;
+        }
+
+        public bool SurfaceYields(TerrainDef hitTerrainDef)
+        {
+            //Find material
+            if (!hitTerrainDef.costList.NullOrEmpty())
+            { 
+                var assumedStuff = hitTerrainDef.costList.Select(x => x.thingDef).FirstOrDefault();
+                if (assumedStuff != null)
+                {
+                    var assumedProperties = assumedStuff.GetCompProperties();
+                }
+            }
+
+            //Exceptions
+            /*
+             * 1. Concrete (made from costlist steel), should have very specific properties
+             */
+
+            return true;
+        }
+
+        public void HandleRicochet(Vector3 incidentVelocity, Vector3 surfaceNormal, )
+        {
+
+        }
+
         /// <summary>
         /// See whether a projectile at pos can bounce off of a hit thing
         /// </summary>
@@ -99,14 +151,21 @@ namespace CombatExtended
 
             /*Consider nulls when:
                 ProjectileCE.TryCollideWithRoof(success),       =>  ExactPosition is EXACTLY the raycast intersect with the roof
-                ProjectileCE.ImpactSomething(last resort)       =>  
+                ProjectileCE.ImpactSomething(last resort)       =>  ExactPosition is the EXACT Destination with Height == 0f
               Ignored:
                 ProjectileCE_Explosive.Explode(),               =>  turns into ProjectileCE.Impact(null)
                 BulletCE.Impact(hitThing=null),                 =>  turns into ProjectileCE.Impact(null)
             */
             if (hitThing == null)
             {
+                //Simplest case: projectile hits terrain or roof
+                return true;
+            }
 
+            if (hitThing is Building)
+            {
+                //More difficult case
+                return true;
             }
 
             var projCE = parent as ProjectileCE;
