@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Patch>
+
+	<Operation Class="PatchOperationSequence">
+  	<success>Always</success>
+  	<operations>
+    	<li Class="PatchOperationTest">
+      	<xpath>*/TerrainDef[defName="Concrete"]/tags</xpath>
+      	<success>Invert</success>
+    	</li>
+    	<li Class="PatchOperationAdd">
+      	<xpath>*/TerrainDef[defName="Concrete"]</xpath>
+      	<value>
+        	<tags />
+      	</value>
+    	</li>
+  	</operations>
+
+	<Operation Class="PatchOperationSequence">
+  	<success>Always</success>
+  	<operations>
+    	<li Class="PatchOperationTest">
+      	<xpath>*/TerrainDef[defName="PavedTile"]/tags</xpath>
+      	<success>Invert</success>
+    	</li>
+    	<li Class="PatchOperationAdd">
+      	<xpath>*/TerrainDef[defName="PavedTile"]</xpath>
+      	<value>
+        	<tags />
+      	</value>
+    	</li>
+  	</operations>
+
+	<Operation Class="PatchOperationSequence">
+  	<success>Always</success>
+  	<operations>
+    	<li Class="PatchOperationTest">
+      	<xpath>*/TerrainDef[defName="BrokenAsphalt"]/tags</xpath>
+      	<success>Invert</success>
+    	</li>
+    	<li Class="PatchOperationAdd">
+      	<xpath>*/TerrainDef[defName="BrokenAsphalt"]</xpath>
+      	<value>
+        	<tags />
+      	</value>
+    	</li>
+  	</operations>
+	
+	<Operation Class="PatchOperationAdd">
+  	<xpath>*/TerrainDef[defName="Concrete" or defName="PavedTile" or defName="BrokenAsphalt"]/tags</xpath>
+  	<value>
+      <li>CE_Concrete</li>
+  	</value>
+	</Operation>
+	
+</Patch>

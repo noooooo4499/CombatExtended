@@ -8,9 +8,8 @@ namespace CombatExtended
     public enum MaterialFailMode : byte
     {
         Unyielding,
-        SemiHard,
-        SemiYielding,
         Frangible,
-        Malleable
+        Malleable,
+        Liquid
     }
 }
