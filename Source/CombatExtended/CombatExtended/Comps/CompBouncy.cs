@@ -60,10 +60,9 @@ namespace CombatExtended
      *         - Rathman, 1987
      *  - Edward E. Hueske (2015). Practical Analysis and Reconstruction of Shooting Incidents
      */
-
+    
     public class CompBouncy : ThingComp
     {
-
         public CompProperties_Bouncy Props
         {
             get
@@ -72,7 +71,7 @@ namespace CombatExtended
             }
         }
 
-        public MaterialFailMode SurfaceYields(Thing hitThing)
+        public MaterialFailMode SurfaceYields(Thing hitThing, ref float surfaceStrength)
         {
             //Exceptions
             /*
@@ -82,78 +81,90 @@ namespace CombatExtended
              *  1c. Humans
              */
 
+            //  Armadillo: http://meyersgroup.ucsd.edu/papers/journals/Meyers%20348.pdf
+
             //"Last resort" Find material
             if (hitThing.def.MadeFromStuff)
             {
-                return SurfaceYields(hitThing.Stuff);
+                return SurfaceYields(hitThing.Stuff, ref surfaceStrength);
             }
             else if (hitThing.def.IsStuff)
             {
-                return SurfaceYields(hitThing.def);
+                return SurfaceYields(hitThing.def, ref surfaceStrength);
             }
             
             return MaterialFailMode.Unyielding;
         }
 
-        public MaterialFailMode SurfaceYields(ThingDef thingDef)
+        //  https://people.eng.unimelb.edu.au/stsy/geomechanics_text/Ch8_Strength.pdf
+        //  http://www-materials.eng.cam.ac.uk/mpsite/interactive_charts/strength-toughness/basic.html
+
+        public MaterialFailMode SurfaceYields(ThingDef thingDef, ref float surfaceStrength)
         {
             if (thingDef.IsStuff)
             {
                 var categories = thingDef.stuffProps.categories;
-                float factor;
 
                 if (categories.Contains(StuffCategoryDefOf.Metallic))
                 {
-                    factor = 60 * thingDef.statBases.Where(
+                    surfaceStrength = 60 * thingDef.statBases.Where(
                         x => x.stat == StatDefOf.StuffPower_Armor_Blunt
                           || x.stat == StatDefOf.StuffPower_Armor_Sharp
                           || x.stat == StatDefOf.BluntDamageMultiplier
                           || x.stat == StatDefOf.SharpDamageMultiplier).Select(x => x.value).Sum();
+                    return MaterialFailMode.Malleable;
                 }
                 else if (categories.Contains(StuffCategoryDefOf.Woody))
                 {
-                    factor = 5 * thingDef.statBases.Where(
+                    surfaceStrength = 5 * thingDef.statBases.Where(
                         x => x.stat == StatDefOf.StuffPower_Armor_Blunt
                           || x.stat == StatDefOf.StuffPower_Armor_Sharp
                           || x.stat == StatDefOf.BluntDamageMultiplier
                           || x.stat == StatDefOf.SharpDamageMultiplier).Select(x => x.value).Sum();
+                    return MaterialFailMode.Frangible;
                 }
                 else if (categories.Contains(StuffCategoryDefOf.Stony))
                 {
-                    factor = 12 * thingDef.statBases.Where(
+                    surfaceStrength = 12 * thingDef.statBases.Where(
                         x => x.stat == StatDefOf.Mass
                           || x.stat == StatDefOf.MaxHitPoints
                           || x.stat == StatDefOf.BluntDamageMultiplier
                           || x.stat == StatDefOf.SharpDamageMultiplier).Select(x => x.value).Sum();
+                    return MaterialFailMode.Frangible;
                 }
                 else if (categories.Contains(StuffCategoryDefOf.Fabric))
                 {
-                    factor = 5 * thingDef.statBases.Where(
+                    surfaceStrength = 5 * thingDef.statBases.Where(
                         x => x.stat == StatDefOf.StuffPower_Armor_Blunt
                           || x.stat == StatDefOf.StuffPower_Armor_Sharp).Select(x => x.value).Sum();
+                    return MaterialFailMode.Frangible;
                 }
                 else if (categories.Contains(StuffCategoryDefOf.Leathery))
                 {
-                    factor = 2 * thingDef.statBases.Where(
+                    surfaceStrength = thingDef.statBases.Where(
                         x => x.stat == StatDefOf.StuffPower_Armor_Blunt
                           || x.stat == StatDefOf.StuffPower_Armor_Sharp).Select(x => x.value).Sum();
+                    return MaterialFailMode.Malleable;
                 }
             }
             return MaterialFailMode.Unyielding;
         }
 
-        public MaterialFailMode SurfaceYields(RoofDef roofDef)
+        public MaterialFailMode SurfaceYields(RoofDef roofDef, ref float surfaceStrength)
         {
             if (roofDef.isThickRoof)        // Sufficiently thick slabs of material are not penetrable/ricochettable
                                             // M. Jauhari (1969). Bullet Ricochet from Metal Plates. The Journal of Criminal Law, Criminology and Police Science, 60(3), pp.387-394.
             {
+                SurfaceYields(ThingDefOf.BlocksGranite, ref surfaceStrength);
                 return MaterialFailMode.Unyielding;
             }
 
             if (roofDef.isNatural)
             {
+                SurfaceYields(ThingDefOf.BlocksGranite, ref surfaceStrength);
                 return MaterialFailMode.Frangible;  //Assume frangible - rock-like chipping off and thus lower ricochet angle than impact angle
             }
+
             return MaterialFailMode.Malleable;      //Non-natural
         }
 
@@ -161,11 +172,9 @@ namespace CombatExtended
          * Ignored surfaces:
          * 
          * Underwall
-         * BurnedWoodPlankFloor
-         * BurnedCarpet
          * 
          */
-        public MaterialFailMode SurfaceYields(TerrainDef terrainDef)
+        public MaterialFailMode SurfaceYields(TerrainDef terrainDef, ref float surfaceStrength)
         {
             if (terrainDef.HasTag("Water")
              || terrainDef.takeSplashes
@@ -176,17 +185,31 @@ namespace CombatExtended
 
             if (terrainDef.affordances.Contains(TerrainAffordanceDefOf.Diggable) // PackedDirt, Soil, MossyTerrain, MarshyTerrain, SoilRich, Gravel, Mud, Sand, SoftSand, Ice
              || terrainDef.generatedFilth == ThingDefOf.Filth_Dirt
-             || terrainDef.takeFootprints)    
+             || terrainDef.takeFootprints)
             {
-                if (terrainDef.scatterType == "SoftGray")   // Ice
+                //  Strengths for soils: https://www.jsg.utexas.edu/tyzhu/files/Some-Useful-Numbers.pdf
+                if (terrainDef.driesTo != null)             // Wet terrain
                 {
-
+                    surfaceStrength = 0.1f;
                 }
+                else if (terrainDef.scatterType == "SoftGray")   // Ice
+                {
+                    surfaceStrength = 8.7f;     //  Young's modulus from http://people.ee.ethz.ch/~luethim/pdf/script/pdg/appendixB.pdf
+                }
+                else if (terrainDef.fertility > 1.2f)   // High-fertility soils contain more clay
+                {
+                    surfaceStrength = 0.01f;
+                }
+                else if (terrainDef.generatedFilth == DefDatabase<ThingDef>.GetNamed("Filth_Sand"))    // Sand, SoftSand
+                {
+                    //  Sand/water impacts:     https://www.sciencedirect.com/science/article/pii/S2214914715000860#f0010
 
-                //if (hitTerrainDef.generatedFilth == ThingDefOf.Filth_Sand)    // Sand, SoftSand
-               // {
-//
-               // }
+                    surfaceStrength = 0.05f;
+                }
+                else
+                {
+                    surfaceStrength = 0.2f;
+                }
 
                 return MaterialFailMode.Frangible;
             }
@@ -218,19 +241,23 @@ namespace CombatExtended
                 var assumedStuff = terrainDef.costList.Select(x => x.thingDef).Where(x => x.IsStuff).FirstOrDefault();
                 if (assumedStuff != null)
                 {
-                    return SurfaceYields(assumedStuff);
+                    return SurfaceYields(assumedStuff, ref surfaceStrength);
                 }
             }
 
             if (terrainDef.driesTo != null)
             {
-                return SurfaceYields(terrainDef.driesTo);
+                return SurfaceYields(terrainDef.driesTo, ref surfaceStrength);
             }
 
+            /*
+             * BurnedWoodPlankFloor
+             * BurnedCarpet
+             */
             var attemptedBurnedDef = DefDatabase<TerrainDef>.AllDefs.FirstOrDefault(x => x.burnedDef == terrainDef);
             if (attemptedBurnedDef != null)
             {
-                return SurfaceYields(attemptedBurnedDef);
+                return SurfaceYields(attemptedBurnedDef, ref surfaceStrength);
             }
 
             return MaterialFailMode.Unyielding;
@@ -246,6 +273,9 @@ namespace CombatExtended
         public virtual bool Bounce(Thing hitThing, Vector3 pos, Map map)
         {
             var posIV = pos.ToIntVec3();
+
+            #region Early opt-outs
+
             if (map == null)
             {
                 Log.Warning("CombatExtended :: CompBouncy.Bounce Tried to bounce in a null map.");
@@ -256,16 +286,21 @@ namespace CombatExtended
                 Log.Warning("CombatExtended :: CompBouncy.Bounce Tried to bounce out of bounds");
                 return false;
             }
+           
+            #endregion
 
-            var projCE = parent as ProjectileCE;
+            ProjectileCE projCE = parent as ProjectileCE;
 
-            var ricochetSpeed = projCE.shotSpeed;
-            var ricochetAngleRadians = projCE.shotAngle;
-            var ricochetRotation = projCE.shotRotation;
-
-            var failMode = MaterialFailMode.Unyielding;
+            float ricochetSpeed = projCE.shotSpeed;
+            float ricochetAngleRadians = projCE.shotAngle;
+            float ricochetRotation = projCE.shotRotation;
 
             float ricochetSurfaceAngle = -1;
+
+            #region Obtaining surface properties
+
+            var failMode = MaterialFailMode.Unyielding;
+            float surfaceStrength = 0f;
             Vector3 surfaceNormal = Vector3.zero;
 
             /*Consider nulls when:
@@ -277,75 +312,108 @@ namespace CombatExtended
             */
             if (hitThing == null)
             {
-                //Simplest case: projectile hits terrain
-                if (pos.y < 0.001)
+                if (pos.y < 0.001)                  //Simplest case: projectile hits terrain
                 {
                     surfaceNormal = Vector3.up;     //(0, 1f, 0)
-                    failMode = SurfaceYields(posIV.GetTerrain(map));
+                    failMode = SurfaceYields(posIV.GetTerrain(map), ref surfaceStrength);
                 }
-                //Projectile hits the roof
-                else
+                else                                //Projectile hits the roof
                 {
                     surfaceNormal = Vector3.down;   //(0,-1f, 0)
-                    failMode = SurfaceYields(posIV.GetRoof(map));
+                    failMode = SurfaceYields(posIV.GetRoof(map), ref surfaceStrength);
                 }
             }
-            else if (hitThing is Building)
+            else
             {
                 var height = new CollisionVertical(hitThing);
+                var sphericalNormal = (pos - hitThing.DrawPos);
 
-                if (pos.y >= height.Max - 0.001f)            //Impacted top of building
+                if (hitThing is Building)
                 {
-                    surfaceNormal = Vector3.up;     //(0, 1f, 0)
-                }
-                else                                         //Distinguish between left, top, right or bottom hit of the building
-                {
-                    var sphericalNormal = (pos - hitThing.DrawPos);
-                    var rotatedNormal = sphericalNormal.RotatedBy(45);
-
-                    if (rotatedNormal.x > 0)
+                    if (pos.y >= height.Max - 0.001f)            //Impacted top of building
                     {
-                        if (rotatedNormal.z < 0)
+                        surfaceNormal = Vector3.up;     //(0, 1f, 0)
+                    }
+                    else                                         //Distinguish between left, top, right or bottom hit of the building
+                    {
+                        var rotatedNormal = sphericalNormal.RotatedBy(45);
+
+                        if (rotatedNormal.x > 0)
                         {
-                            surfaceNormal = Vector3.back;       //(  0, 0,-1f)
+                            if (rotatedNormal.z < 0)
+                            {
+                                surfaceNormal = Vector3.back;       //(  0, 0,-1f)
+                            }
+                            else
+                            {
+                                surfaceNormal = Vector3.right;      //( 1f, 0, 0)
+                            }
                         }
                         else
                         {
-                            surfaceNormal = Vector3.right;      //( 1f, 0, 0)
+                            if (rotatedNormal.z < 0)
+                            {
+                                surfaceNormal = Vector3.left;       //(-1f, 0, 0)
+                            }
+                            else
+                            {
+                                surfaceNormal = Vector3.forward;    //(  0, 0, 1f)
+                            }
                         }
                     }
-                    else
-                    {
-                        if (rotatedNormal.z < 0)
-                        {
-                            surfaceNormal = Vector3.left;       //(-1f, 0, 0)
-                        }
-                        else
-                        {
-                            surfaceNormal = Vector3.forward;    //(  0, 0, 1f)
-                        }
-                    }
+
+                    failMode = SurfaceYields(hitThing, ref surfaceStrength);
+
+                    //Consider trees, in that case use the vector going from hitThing.DrawPos to projCE.ExactPosition
                 }
-
-                failMode = SurfaceYields(hitThing);
-
-                //Consider trees, in that case use the vector going from hitThing.DrawPos to projCE.ExactPosition
             }
-            
-            // TODO : Use equations of motion or smaller delta time interval to get more accurate direction
-            Vector3 incidentDirection = projCE.ShotLine.direction;
+            #endregion
 
+            //  TODO : Use equations of motion or smaller delta time interval to get more accurate direction
+            Vector3 incidentDirection = projCE.ShotLine.direction;
             float incidentSurfaceAngle = 90 - Vector3.Angle(incidentDirection, surfaceNormal);
 
+            //  Error logging
             if (incidentSurfaceAngle < 0)
-            {
                 Log.Error("CombatExtended :: incidentSurfaceAngle is below 0 for CompBouncy impacting "+hitThing.ToString());
+
+            if (failMode == MaterialFailMode.Malleable)         // metals and non-thick, non-natural roofs
+            {
+                float r = 0f;               //[inch]
+                float h = 0f;               //[inch]
+                float mg = 0f;              //[lb]
+
+                float psiSurfaceStrength = surfaceStrength * 145038f;   // 145038 psi = 1 GPa
+
+                //Werner Goldsmith (1999). Non-ideal projectile impact on targets . International Journal of Impact Engineering, 22, pp.362-365
+                float v50n = 11.9f * Mathf.Pow(psiSurfaceStrength, 0.333f) * Mathf.Pow(r * h, 0.75f) / Mathf.Sqrt(mg);   //   m/s
+                float sinAngle = Mathf.Sin(incidentSurfaceAngle * Mathf.Deg2Rad);
+                ricochetSpeed = projCE.shotSpeed * (1 - (Mathf.Pow(sinAngle, 2) / 2 + (1 - Mathf.Pow(sinAngle, 2) / 2) * Mathf.Sqrt(sinAngle * 4 * projCE.shotSpeed / v50n)));
+            }
+            else if (failMode == MaterialFailMode.Frangible)    // nearly everything else
+            {
+
+            }
+            else if (failMode == MaterialFailMode.Unyielding)   // thick roofs
+            {
+
+            }
+            else if (failMode == MaterialFailMode.Liquid)       // water
+            {
+                //  Very simple formulae for critical angle:    http://www2.eng.cam.ac.uk/~hemh1/dambusters/ricochet_hutchings1.pdf
             }
 
             //  Impact angle ALPHA must be at or below critical angle ALPHA_crit (Hueske (2015), p.260) for ricochetting
-            float criticalAngle = 90f;
+            float RhoP = 0f;            // [kg/m3]
+            float Yprojectile = 0f;
+            float RhoT = 0f;
+            float Rtarget = 0f;
+            float v = 4 * projCE.shotSpeed;
 
-            if (incidentSurfaceAngle <= criticalAngle)
+            float u = (RhoP * v - Mathf.Sqrt(RhoP*RhoP * v*v - (RhoP - RhoT) * (RhoP * v*v + 2 * (Yprojectile - Rtarget))))/(RhoP - RhoT);
+            float criticalAngle = Mathf.Atan(Mathf.Sqrt(RhoP * v*v / Rtarget * (v + u)/(v - u)));
+
+            if (incidentSurfaceAngle <= criticalAngle * 0.9f)
             {
                 //  Frangibility effect on out angle (Hueske (2015), p.266-267)
                 //  Harder surface => smaller ricochet angle (Hueske (2015), p.260)     ==> Ricochet angle is "Lerped" (or acos(x)/1-exp(-b x)) from ~2 (hard) upwards based on delta hardness!
@@ -364,7 +432,7 @@ namespace CombatExtended
                     ricochetSurfaceAngle = Mathf.Min(90f, 2f * incidentSurfaceAngle);
                 }
             }
-            else if (incidentSurfaceAngle + 10 <= criticalAngle)
+            else if (incidentSurfaceAngle <= criticalAngle * 1.1f)
             {
                 //ADD EXCEPTIONS for other failmodes
 
@@ -375,7 +443,7 @@ namespace CombatExtended
                 if (failMode == MaterialFailMode.Unyielding)        //Nonyielding surface: fragment (and penetrate?)
                 {
                     //Spawn in fragments to replace the bullet
-                    projCE.Destroy();
+                    //projCE.Destroy();
                 }
                 return false;                                       //Yielding surface: penetrate.
             }
