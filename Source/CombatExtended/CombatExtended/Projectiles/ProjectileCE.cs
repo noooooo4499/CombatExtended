@@ -808,14 +808,14 @@ namespace CombatExtended
             if (ExactPosition.ToIntVec3().IsValid)
             {
                 if (compBouncy != null &&
-                    compBouncy.Bounce(hitThing, ExactPosition, Find.CurrentMap))
+                    compBouncy.Bounce(hitThing, ExactPosition, Map))
                 {
                     return;
                 }
 
                 if (compExplode != null)
                 {
-                    compExplode.Explode(launcher, ExactPosition, Find.CurrentMap);
+                    compExplode.Explode(launcher, ExactPosition, Map);
                 }
             }
 			
