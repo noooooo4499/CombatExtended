@@ -235,10 +235,19 @@ namespace CombatExtended
         }
         */
 
-        #endregion Misc
+        public static ThingDef RockBaseFromTerrain(TerrainDef terrainDef)
+        {
+            var terrainBase = DefDatabase<TerrainDef>.AllDefs.FirstOrDefault(x => x.smoothedTerrain == terrainDef);
+            terrainBase = (terrainBase != null ? terrainBase : terrainDef);
+            var rockBase = DefDatabase<ThingDef>.AllDefs.FirstOrDefault(x => x.building?.naturalTerrain == terrainBase || x.building?.leaveTerrain == terrainBase);
 
-        #region MoteThrower
-        public static void ThrowEmptyCasing(Vector3 loc, Map map, ThingDef casingMoteDef, float size = 1f)
+            return rockBase;
+        }
+
+    #endregion Misc
+
+    #region MoteThrower
+    public static void ThrowEmptyCasing(Vector3 loc, Map map, ThingDef casingMoteDef, float size = 1f)
         {
             if (!Controller.settings.ShowCasings || !loc.ShouldSpawnMotesAt(map) || map.moteCounter.SaturatedLowPriority)
             {

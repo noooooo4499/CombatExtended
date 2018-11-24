@@ -82,34 +82,68 @@ namespace CombatExtended
 
         public void SurfaceYields(Thing hitThing, ref BounceInfo bounceInfo)
         {
-            if (hitThing is Pawn)
-            {
-
-            }
-            
-            //Exceptions
+            //Cases
             /*
              * 1. Pawns
              *  1a. Mechanoids
-             *  1b. Animals
-             *  1c. Humans
+             *  1b. Humans
+             *  1c. Animals
              */
+            var pawn = hitThing as Pawn;
+            if (pawn != null)
+            {
+                if (pawn.RaceProps?.IsMechanoid == true)
+                {
+                    SurfaceYields(ThingDefOf.Steel, ref bounceInfo);
+                    return;
+                }
 
-            if (hitThing is )
+                var leatherDef = pawn.RaceProps?.leatherDef;
 
-            //  Armadillo: http://meyersgroup.ucsd.edu/papers/journals/Meyers%20348.pdf
+                if (leatherDef != null)
+                {
+                    SurfaceYields(leatherDef, ref bounceInfo);
+                    return;
+                }
+            }
 
-            //"Last resort" Find material
+            /*
+             * 2. Plants
+             *  2a. Harvestable for Stuff
+             *  2b. Non-harvestable or not harvestable for stuff
+             */
+            var plant = hitThing as Plant;
+            if (plant != null)
+            {
+                if (plant.def?.plant?.harvestedThingDef?.IsStuff == true)
+                {
+                    SurfaceYields(plant.def.plant.harvestedThingDef, ref bounceInfo);
+                }
+                else
+                {
+                    SurfaceYields(ThingDefOf.WoodLog, ref bounceInfo);
+                }
+                return;
+            }
+
             if (hitThing.def.MadeFromStuff)
             {
                 SurfaceYields(hitThing.Stuff, ref bounceInfo);
                 return;
             }
-            else if (hitThing.def.IsStuff)
+
+            SurfaceYields(hitThing.def, ref bounceInfo);
+            return;
+
+            var building = hitThing as Building;
+            if (building != null)
             {
-                SurfaceYields(hitThing.def, ref bounceInfo);
+                SurfaceYields(building.def, ref bounceInfo);
                 return;
             }
+
+            //  Armadillo: http://meyersgroup.ucsd.edu/papers/journals/Meyers%20348.pdf
+            
 
             Log.Message("Starting SurfaceYields(" + hitThing.ToString() + ", bounceInfo) failed MadeFromStuff && IsStuff.");
 
@@ -121,9 +155,24 @@ namespace CombatExtended
 
         public void SurfaceYields(ThingDef thingDef, ref BounceInfo bounceInfo)
         {
+            if (!thingDef.IsStuff && thingDef.building?.mineableThing != null)
+            {
+                thingDef = thingDef.building.mineableThing;
+            }
+
+            if (!thingDef.IsStuff && thingDef.butcherProducts?.NullOrEmpty() == false)
+            {
+                thingDef = thingDef.butcherProducts.FirstOrDefault(x => x.thingDef.IsStuff).thingDef;
+            }
+
+            if (!thingDef.IsStuff && thingDef.smeltProducts?.NullOrEmpty() == false)
+            {
+                thingDef = thingDef.smeltProducts.FirstOrDefault().thingDef;
+            }
+
             if (thingDef.IsStuff)
             {
-                var categories = thingDef.stuffProps.categories;
+                var categories = thingDef.stuffProps?.categories;
 
                 if (categories.Contains(StuffCategoryDefOf.Metallic))
                 {
@@ -207,7 +256,7 @@ namespace CombatExtended
 
             if (terrainDef.HasTag("Water")
              || terrainDef.takeSplashes
-             || terrainDef.affordances.Contains(TerrainAffordanceDefOf.MovingFluid))
+             || terrainDef.affordances?.Contains(TerrainAffordanceDefOf.MovingFluid) == true)
             {
                 bounceInfo.hardness = 0f;
                 bounceInfo.density = 1f;
@@ -215,7 +264,7 @@ namespace CombatExtended
                 return;
             }
 
-            if (terrainDef.affordances.Contains(TerrainAffordanceDefOf.Diggable) // PackedDirt, Soil, MossyTerrain, MarshyTerrain, SoilRich, Gravel, Mud, Sand, SoftSand, Ice
+            if (terrainDef.affordances?.Contains(TerrainAffordanceDefOf.Diggable) == true // PackedDirt, Soil, MossyTerrain, MarshyTerrain, SoilRich, Gravel, Mud, Sand, SoftSand, Ice
              || terrainDef.generatedFilth == ThingDefOf.Filth_Dirt
              || terrainDef.takeFootprints)
             {
@@ -253,14 +302,23 @@ namespace CombatExtended
             }
 
                 //Soil types already filtered out
-            if (terrainDef.HasTag("CE_Concrete")
-             || terrainDef.scatterType == "Rocky")    // Concrete, PavedTile, BrokenAsphalt
+            if (terrainDef.HasTag("CE_Concrete"))    // Concrete, PavedTile, BrokenAsphalt
             {
                 bounceInfo.density = 2.4f;
                 bounceInfo.hardness = 10;       //GPa (from https://www.slowtwitch.com/articles/images/4/114934-largest_asphalt_540.jpg)
                 bounceInfo.materialFailMode = Rand.Chance(0.8f) ? MaterialFailMode.Frangible : MaterialFailMode.Malleable;
                 return;
                 // Concrete fails according to random chance as either frangible or malleable
+            }
+
+            if (terrainDef.scatterType == "Rocky")   // !! ALL NATURAL ROCKS !! 
+            {
+                var rockDef = CE_Utility.RockBaseFromTerrain(terrainDef);
+
+                if (rockDef != null)
+                {
+                    SurfaceYields(rockDef, ref bounceInfo);
+                }
             }
 
             /*
@@ -279,10 +337,10 @@ namespace CombatExtended
             //Find material
             if (!terrainDef.costList.NullOrEmpty())
             {
-                var assumedStuff = terrainDef.costList.Select(x => x.thingDef).Where(x => x.IsStuff).FirstOrDefault();
+                var assumedStuff = terrainDef.costList.FirstOrDefault(x => x.thingDef.IsStuff);
                 if (assumedStuff != null)
                 {
-                    SurfaceYields(assumedStuff, ref bounceInfo);
+                    SurfaceYields(assumedStuff.thingDef, ref bounceInfo);
                     return;
                 }
             }
@@ -333,21 +391,18 @@ namespace CombatExtended
 
             ProjectileCE projCE = parent as ProjectileCE;
 
-            //if (projCE.shotSpeed < 25f)
-            //{
-            //    return false;
-            //}
+            //things this slow don't bounce
+            if (projCE.shotSpeed < 1f)
+            {
+                return false;
+            }
             #endregion
-
 
             //Variables to be extracted
             float ricochetSpeed = projCE.shotSpeed;
             float ricochetSurfaceAngle = -1;
 
             #region Obtaining surface properties
-            
-            Vector3 surfaceNormal = Vector3.zero;
-
             /*Consider nulls when:
                 ProjectileCE.TryCollideWithRoof(success),       =>  ExactPosition is EXACTLY the raycast intersect with the roof
                 ProjectileCE.ImpactSomething(last resort)       =>  ExactPosition is the EXACT Destination with Height == 0f
@@ -357,17 +412,28 @@ namespace CombatExtended
             */
             if (hitThing == null)
             {
+                var terrain = posIV.GetTerrain(map);
+
                 if (pos.y < 0.001)                  //Simplest case: projectile hits terrain
                 {
-                    SurfaceYields(posIV.GetTerrain(map), ref bounceInfoInt);
+                    SurfaceYields(terrain, ref bounceInfoInt);
                 }
                 else                                //Projectile hits the roof (on top or bottom)
                 {
                     var roof = posIV.GetRoof(map);
-                    var roofBounds = CE_Utility.GetBoundsFor(posIV, roof);
+                    var rockDef = (roof.isNatural && terrain != null) ? CE_Utility.RockBaseFromTerrain(terrain) : null;
 
+                    var roofBounds = CE_Utility.GetBoundsFor(posIV, roof);
                     bounceInfoInt.normal = pos.y >= roofBounds.max.y ? Vector3.up : Vector3.down;   //(0,-1f, 0)
-                    SurfaceYields(roof, ref bounceInfoInt);
+
+                    if (rockDef != null)
+                    {
+                        SurfaceYields(rockDef, ref bounceInfoInt);
+                    }
+                    else
+                    {
+                        SurfaceYields(roof, ref bounceInfoInt);
+                    }
                 }
             }
             else
@@ -377,40 +443,37 @@ namespace CombatExtended
 
                 SurfaceYields(hitThing, ref bounceInfoInt);
 
-                if (hitThing is Building)
+                if (pos.y >= height.Max - 0.001f)            //Impacted top of thing
                 {
-                    if (pos.y >= height.Max - 0.001f)            //Impacted top of building
+                    bounceInfoInt.normal = Vector3.up;     //(0, 1f, 0)
+                }
+                else
+                {
+
+                    if (hitThing is Building)
                     {
-                        surfaceNormal = Vector3.up;     //(0, 1f, 0)
-                    }
-                    else                                         //Distinguish between left, top, right or bottom hit of the building
-                    {
+                        //Distinguish between left, top, right or bottom hit of the building
                         var rotatedNormal = sphericalNormal.RotatedBy(-45);
 
-                        if (rotatedNormal.x > 0)
-                        {
-                            if (rotatedNormal.z < 0)
-                            {
-                                surfaceNormal = Vector3.back;       //(  0, 0,-1f)
+                        if (rotatedNormal.x > 0) {
+                            if (rotatedNormal.z < 0) {
+                                bounceInfoInt.normal = Vector3.back;       //(  0, 0,-1f)
+                            } else {
+                                bounceInfoInt.normal = Vector3.right;      //( 1f, 0, 0)
                             }
-                            else
-                            {
-                                surfaceNormal = Vector3.right;      //( 1f, 0, 0)
-                            }
-                        }
-                        else
-                        {
-                            if (rotatedNormal.z < 0)
-                            {
-                                surfaceNormal = Vector3.left;       //(-1f, 0, 0)
-                            }
-                            else
-                            {
-                                surfaceNormal = Vector3.forward;    //(  0, 0, 1f)
+                        } else {
+                            if (rotatedNormal.z < 0) {
+                                bounceInfoInt.normal = Vector3.left;       //(-1f, 0, 0)
+                            } else {
+                                bounceInfoInt.normal = Vector3.forward;    //(  0, 0, 1f)
                             }
                         }
                     }
-                    //Consider trees, in that case use the vector going from hitThing.DrawPos to projCE.ExactPosition
+                    else
+                    {
+                        //Consider trees/pawns, in that case use the vector going from hitThing.DrawPos to projCE.ExactPosition
+                        bounceInfoInt.normal = new Vector3(sphericalNormal.x, 0f, sphericalNormal.z);
+                    }
                 }
             }
 
@@ -426,13 +489,25 @@ namespace CombatExtended
 
             //  TODO : Use equations of motion or smaller delta time interval to get more accurate direction
             Vector3 incidentDirection = projCE.ShotLine.direction;
-            float incidentSurfaceAngle = Vector3.Angle(incidentDirection, surfaceNormal) - 90f;
+            float incidentSurfaceAngle = Vector3.Angle(incidentDirection, bounceInfoInt.normal) - 90f;
 
             float criticalAngle = 0f;
 
             //  Error logging
             if (incidentSurfaceAngle < 0)
-                Log.Error("CombatExtended :: incidentSurfaceAngle is below 0 for CompBouncy impacting "+(hitThing != null ? hitThing.ToString() : "null"));
+            {
+                Log.Message("incidentDirection=" + incidentDirection.ToString("F4")
+                    + "; bounceInfoInt.normal=" + bounceInfoInt.normal.ToString("F4")
+                    + ";\n projCE.shotSpeed=" + projCE.shotSpeed.ToString("F4")
+                    + "; incidentSurfaceAngle=" + incidentSurfaceAngle.ToString("F4")
+                    + "; criticalAngle=" + criticalAngle.ToString("F4")
+                    + ";\n ricochetSpeed=" + ricochetSpeed.ToString("F4")
+                    + "; ricochetSurfaceAngle=" + ricochetSurfaceAngle.ToString("F4")
+                    + "; pos=" + pos.ToString("F4"));
+                Log.Error("CombatExtended :: incidentSurfaceAngle ("+ incidentSurfaceAngle.ToString("F4")+") is below 0 for CompBouncy impacting " + (hitThing != null ? hitThing.ToString() : "null"));
+
+                return false;
+            }
 
             float v = 4 * projCE.shotSpeed;
 
@@ -452,7 +527,7 @@ namespace CombatExtended
                 if (sqrtContent2 < 0)    //basically no ricochet occurs at any angle
                     return false;
 
-                criticalAngle = Mathf.Atan(Mathf.Sqrt(sqrtContent2));
+                criticalAngle = Mathf.Min(Mathf.Atan(Mathf.Sqrt(sqrtContent2)), 90f);
 
                 if (incidentSurfaceAngle <= criticalAngle)
                 {
@@ -486,15 +561,17 @@ namespace CombatExtended
                 if (sqrtContent < 0)    //basically no ricochet occurs at any angle
                     return false;
 
-                criticalAngle = Mathf.Rad2Deg * Mathf.Sqrt(sqrtContent);    //inaccurate at low velocities
+                criticalAngle = Mathf.Min(Mathf.Rad2Deg * Mathf.Sqrt(sqrtContent), 90f);    //inaccurate at low velocities
 
-                //if (surfaceFailMode == MaterialFailMode.Frangible)    // nearly everything else
-                //{
-                //}
-
-                //  W. Goldsmith (1999). p.371
-                ricochetSpeed = projCE.shotSpeed * (1f - incidentSurfaceAngle / criticalAngle);
-                ricochetSurfaceAngle = incidentSurfaceAngle * (2.5f - 1.5f * incidentSurfaceAngle / criticalAngle);
+                if (incidentSurfaceAngle <= criticalAngle)
+                {
+                    ricochetSpeed = projCE.shotSpeed * (1f - incidentSurfaceAngle / criticalAngle);
+                    ricochetSurfaceAngle = Mathf.Min(incidentSurfaceAngle * (2.5f - 1.5f * incidentSurfaceAngle / criticalAngle), 180f);
+                }
+                else
+                {
+                    return false;
+                }
 
                 //if (surfaceFailMode == MaterialFailMode.Liquid)
                 //{
@@ -505,21 +582,22 @@ namespace CombatExtended
 
             //  Impact angle ALPHA must be at or below critical angle ALPHA_crit (Hueske (2015), p.260) for ricochetting
             
-            Vector3 ricochetPlaneNormal = Vector3.Cross(incidentDirection, surfaceNormal);
+            Vector3 ricochetPlaneNormal = Vector3.Cross(incidentDirection, bounceInfoInt.normal);
             
             Vector3 reflectedDirection = Quaternion.AngleAxis((incidentSurfaceAngle + ricochetSurfaceAngle) - 180, ricochetPlaneNormal) * -incidentDirection;
             
             float ricochetRotation = -90 + Mathf.Rad2Deg * Mathf.Atan2(reflectedDirection.z, reflectedDirection.x);
             float ricochetAngleRadians = Mathf.Atan2(reflectedDirection.z, reflectedDirection.MagnitudeHorizontal());
 
-            Log.Message("incidentDirection=" + incidentDirection.ToString("F4")
-                + ";\n surfaceNormal=" + surfaceNormal.ToString("F4")
-                + ";\n reflectedDirection=" + reflectedDirection.ToString("F4")
+            /*Log.Message("incidentDirection=" + incidentDirection.ToString("F4")
+                + "; bounceInfoInt.normal=" + bounceInfoInt.normal.ToString("F4")
+                + "; reflectedDirection=" + reflectedDirection.ToString("F4")
                 + ";\n projCE.shotSpeed=" + projCE.shotSpeed.ToString("F4")
-                + ";\n incidentSurfaceAngle=" + incidentSurfaceAngle.ToString("F4")
-                + ";\n criticalAngle=" + criticalAngle.ToString("F4")
+                + "; incidentSurfaceAngle=" + incidentSurfaceAngle.ToString("F4")
+                + "; criticalAngle=" + criticalAngle.ToString("F4")
                 + ";\n ricochetSpeed=" + ricochetSpeed.ToString("F4")
-                + ";\n ricochetSurfaceAngle=" + ricochetSurfaceAngle.ToString("F4"));
+                + "; ricochetSurfaceAngle=" + ricochetSurfaceAngle.ToString("F4")
+                + "; pos=" + pos.ToString("F4"));*/
 
             //Perfectly elastic collision Vector3 reflectedDirection = Vector3.Reflect(incidentDirection, surfaceNormal);
 

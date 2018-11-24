@@ -115,6 +115,7 @@ namespace CombatExtended
                         if (shotAngle < 0f)
                         {
                             destinationInt = origin;
+                            ExactPosition = origin;
                             startingTicksToImpactInt = 0f;
                             ImpactSomething();
                             return 0f;
@@ -420,10 +421,10 @@ namespace CombatExtended
 
         public virtual void Launch(Vector2 origin, float shotAngle, float shotRotation, float shotHeight, float shotSpeed)
         {
-            if (launcher == null || equipmentDef == null)
+            if (this.launcher == null && this.equipmentDef == null)
             {
                 Log.Error("CombatExtended :: Tried to Launch a ProjectileCE with method Launch(Vector2 origin, float shotAngle, float shotRotation, float shotHeight, float shotSpeed)" +
-                    "before the projectile was properly launched (launcher = "+(launcher != null ? launcher.ToString() : "Null")+", equipmentDef = "+(equipmentDef != null ? equipmentDef.ToString() : "Null")+".");
+                    "before the projectile was properly launched (this.launcher = " + (this.launcher != null ? this.launcher.ToString() : "Null")+ ", this.equipmentDef = " + (this.equipmentDef != null ? this.equipmentDef.ToString() : "Null")+".");
                 return;
             }
 
@@ -439,9 +440,14 @@ namespace CombatExtended
             lastExactPos.x = -1000;
             lastShotLine = -1;
 
-            var prevEq = this.equipmentDef;
-            Launch(this.launcher, origin, shotAngle, shotRotation, shotHeight, shotSpeed, null);
-            this.equipmentDef = prevEq;
+            this.shotAngle = shotAngle;
+            this.shotHeight = shotHeight;
+            this.shotRotation = shotRotation;
+            this.shotSpeed = shotSpeed;
+            this.origin = origin;
+            //For explosives/bullets, equipmentDef is important
+
+            ticksToImpact = IntTicksToImpact;
         }
         #endregion
 
@@ -751,38 +757,41 @@ namespace CombatExtended
         {
             var pos = ExactPosition.ToIntVec3();
 
-            //Not modified, just mortar code
-            if (def.projectile.flyOverhead)
+            if (pos.IsValid)
             {
-                RoofDef roofDef = base.Map.roofGrid.RoofAt(pos);
-                if (roofDef != null)
+                //Not modified, just mortar code
+                if (def.projectile.flyOverhead)
                 {
-                    if (roofDef.isThickRoof)
+                    RoofDef roofDef = base.Map.roofGrid.RoofAt(pos);
+                    if (roofDef != null)
                     {
-                        this.def.projectile.soundHitThickRoof.PlayOneShot(new TargetInfo(pos, base.Map, false));
-                        this.Destroy(DestroyMode.Vanish);
-                        return;
-                    }
-                    if (pos.GetEdifice(base.Map) == null || pos.GetEdifice(base.Map).def.Fillage != FillCategory.Full)
-                    {
-                        RoofCollapserImmediate.DropRoofInCells(pos, base.Map);
+                        if (roofDef.isThickRoof)
+                        {
+                            this.def.projectile.soundHitThickRoof.PlayOneShot(new TargetInfo(pos, base.Map, false));
+                            this.Destroy(DestroyMode.Vanish);
+                            return;
+                        }
+                        if (pos.GetEdifice(base.Map) == null || pos.GetEdifice(base.Map).def.Fillage != FillCategory.Full)
+                        {
+                            RoofCollapserImmediate.DropRoofInCells(pos, base.Map);
+                        }
                     }
                 }
-            }
 
-            // FIXME : Early opt-out
-            Thing thing = pos.GetFirstPawn(Map);
-            if (thing != null && TryCollideWith(thing))
-            {
-                return;
-            }
+                // FIXME : Early opt-out
+                Thing thing = pos.GetFirstPawn(Map);
+                if (thing != null && TryCollideWith(thing))
+                {
+                    return;
+                }
 
-            List<Thing> list = Map.thingGrid.ThingsListAt(pos).Where(t => t is Pawn || t.def.Fillage != FillCategory.None).ToList();
-            if (list.Count > 0)
-            {
-                foreach (var thing2 in list) {
-                    if (TryCollideWith(thing2))
-                        return;
+                List<Thing> list = Map.thingGrid.ThingsListAt(pos).Where(t => t is Pawn || t.def.Fillage != FillCategory.None).ToList();
+                if (list.Count > 0)
+                {
+                    foreach (var thing2 in list) {
+                        if (TryCollideWith(thing2))
+                            return;
+                    }
                 }
             }
 

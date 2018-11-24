@@ -100,12 +100,13 @@
 		<projectile Class="CombatExtended.ProjectilePropertiesCE">
 			<damageAmountBase>11</damageAmountBase>
 			<armorPenetrationBase>0.485</armorPenetrationBase>
+			<speed>248</speed>
 		</projectile>
 		<comps>
 			<li Class="CombatExtended.CompProperties_Bouncy">
 				<density>9</density>	<!-- g/L		-->
 				<hardness>14</hardness>	<!-- GPa (lead)	-->
-				<weight>4.02</weight>		<!-- g			-->
+				<weight>3.56</weight>	<!-- g			-->
 				<diameter>5.7</diameter><!-- mm			-->
 			</li>
 		</comps>
@@ -117,6 +118,7 @@
 		<projectile Class="CombatExtended.ProjectilePropertiesCE">
 			<damageAmountBase>7</damageAmountBase>
 			<armorPenetrationBase>0.635</armorPenetrationBase>
+			<speed>253</speed>
 		</projectile>
 		<comps>
 			<li Class="CombatExtended.CompProperties_Bouncy">
@@ -134,12 +136,13 @@
 		<projectile Class="CombatExtended.ProjectilePropertiesCE">
 			<damageAmountBase>15</damageAmountBase>
 			<armorPenetrationBase>0.335</armorPenetrationBase>
+			<speed>228</speed>
 		</projectile>
 		<comps>
 			<li Class="CombatExtended.CompProperties_Bouncy">
 				<density>7</density>	<!-- g/L		-->
 				<hardness>14</hardness>	<!-- GPa (lead)	-->
-				<weight>3.63</weight>	<!-- g			-->
+				<weight>4.02</weight>	<!-- g			-->
 				<diameter>5.7</diameter><!-- mm			-->
 			</li>
 		</comps>
