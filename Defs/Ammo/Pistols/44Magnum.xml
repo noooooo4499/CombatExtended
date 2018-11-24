@@ -91,6 +91,14 @@
 			<speed>97</speed>
 			<dropsCasings>true</dropsCasings>
 		</projectile>
+		<comps>
+			<li Class="CombatExtended.CompProperties_Bouncy">
+				<density>9</density>	<!-- g/L		-->
+				<hardness>14</hardness>	<!-- GPa (lead)	-->
+				<weight>4.02</weight>		<!-- g			-->
+				<diameter>5.7</diameter><!-- mm			-->
+			</li>
+		</comps>
 	</ThingDef>
 
 	<ThingDef Class="CombatExtended.AmmoDef" ParentName="Base44MagnumBullet">
