@@ -66,6 +66,14 @@
 			<armorPenetrationBase>0.25</armorPenetrationBase>
 			<spreadMult>17.8</spreadMult>
 		</projectile>
+		<comps>
+			<li Class="CombatExtended.CompProperties_Bouncy">
+				<density>11.34</density><!-- g/L		-->
+				<hardness>14</hardness>	<!-- GPa (lead)	-->
+				<weight>4.53</weight>	<!-- g			-->
+				<diameter>9.14</diameter><!-- mm		-->
+			</li>
+		</comps>
 	</ThingDef>
   
 	<!-- ==================== Recipes ========================== -->

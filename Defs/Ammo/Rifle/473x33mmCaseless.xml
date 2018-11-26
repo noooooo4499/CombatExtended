@@ -99,6 +99,14 @@
 			<damageAmountBase>8</damageAmountBase>
 			<armorPenetrationBase>0.453</armorPenetrationBase>
 		</projectile>
+		<comps>
+			<li Class="CombatExtended.CompProperties_Bouncy">
+				<density>9</density>	<!-- g/L		-->
+				<hardness>14</hardness>	<!-- GPa (lead)	-->
+				<weight>3.25</weight>	<!-- g			-->
+				<diameter>4.7</diameter><!-- mm		-->
+			</li>
+		</comps>
 	</ThingDef>
 
 	<ThingDef Class="CombatExtended.AmmoDef" ParentName="Base473x33mmCaselessBullet">
@@ -108,6 +116,14 @@
 			<damageAmountBase>5</damageAmountBase>
 			<armorPenetrationBase>0.603</armorPenetrationBase>
 		</projectile>
+		<comps>
+			<li Class="CombatExtended.CompProperties_Bouncy">
+				<density>8.05</density>	<!-- g/L		-->
+				<hardness>200</hardness>	<!-- GPa (steel)	-->
+				<weight>3.25</weight>	<!-- g			-->
+				<diameter>4.7</diameter><!-- mm		-->
+			</li>
+		</comps>
 	</ThingDef>
 
 	<ThingDef Class="CombatExtended.AmmoDef" ParentName="Base473x33mmCaselessBullet">
@@ -117,6 +133,14 @@
 			<damageAmountBase>11</damageAmountBase>
 			<armorPenetrationBase>0.303</armorPenetrationBase>
 		</projectile>
+		<comps>
+			<li Class="CombatExtended.CompProperties_Bouncy">
+				<density>7</density>	<!-- g/L		-->
+				<hardness>14</hardness>	<!-- GPa (lead)	-->
+				<weight>3.25</weight>	<!-- g			-->
+				<diameter>4.7</diameter><!-- mm		-->
+			</li>
+		</comps>
 	</ThingDef>
   
 	<!-- ==================== Recipes ========================== -->

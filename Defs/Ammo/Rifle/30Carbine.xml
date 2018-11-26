@@ -86,6 +86,14 @@
 			<damageAmountBase>13</damageAmountBase>
 			<armorPenetrationBase>0.442</armorPenetrationBase>
 		</projectile>
+		<comps>
+			<li Class="CombatExtended.CompProperties_Bouncy">
+				<density>9</density>	<!-- g/L		-->
+				<hardness>14</hardness>	<!-- GPa (lead)	-->
+				<weight>7.13</weight>	<!-- g			-->
+				<diameter>7.82</diameter><!-- mm			-->
+			</li>
+		</comps>
 	</ThingDef>
 
 	<ThingDef Class="CombatExtended.AmmoDef" ParentName="Base30CarbineBullet">
@@ -95,6 +103,14 @@
 			<damageAmountBase>18</damageAmountBase>
 			<armorPenetrationBase>0.292</armorPenetrationBase>
 		</projectile>
+		<comps>
+			<li Class="CombatExtended.CompProperties_Bouncy">
+				<density>7</density>	<!-- g/L		-->
+				<hardness>14</hardness>	<!-- GPa (lead)	-->
+				<weight>7.13</weight>	<!-- g			-->
+				<diameter>7.82</diameter><!-- mm			-->
+			</li>
+		</comps>
 	</ThingDef>
   
 	<!-- ==================== Recipes ========================== -->

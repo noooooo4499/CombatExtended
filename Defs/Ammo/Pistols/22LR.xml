@@ -84,6 +84,14 @@
 			<damageAmountBase>4</damageAmountBase>
 			<armorPenetrationBase>0.189</armorPenetrationBase>
 		</projectile>
+		<comps>
+			<li Class="CombatExtended.CompProperties_Bouncy">
+				<density>9</density>	<!-- g/L		-->
+				<hardness>14</hardness>	<!-- GPa (lead)	-->
+				<weight>2.1</weight>	<!-- g			-->
+				<diameter>5.7</diameter><!-- mm		-->
+			</li>
+		</comps>
 	</ThingDef>
 	
 	<!--<ThingDef Class="CombatExtended.AmmoDef" ParentName="Base22LRBullet">

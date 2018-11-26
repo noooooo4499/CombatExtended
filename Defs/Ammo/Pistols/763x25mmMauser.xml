@@ -100,6 +100,14 @@
 			<damageAmountBase>9</damageAmountBase>
 			<armorPenetrationBase>0.311</armorPenetrationBase>
 		</projectile>
+		<comps>
+			<li Class="CombatExtended.CompProperties_Bouncy">
+				<density>9</density>	<!-- g/L		-->
+				<hardness>14</hardness>	<!-- GPa (lead)	-->
+				<weight>5.6</weight>	<!-- g			-->
+				<diameter>7.86</diameter><!-- mm		-->
+			</li>
+		</comps>
 	</ThingDef>
 
 	<!--<ThingDef Class="CombatExtended.AmmoDef" ParentName="Base763x25mmMauserBullet">
