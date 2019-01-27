@@ -41,6 +41,7 @@ namespace CombatExtended
             shieldAbsorbed = false;
             armorDeflected = false;
             armorReduced = false;
+            
 
             if (originalDinfo.Def.armorCategory == null) return originalDinfo;
 
@@ -232,9 +233,8 @@ namespace CombatExtended
                 }
                 else
                 {
-                    // Hard armor takes damage as reduced by damage resistance and can be almost impervious to low-penetration attacks
-                    float armorDamage = Mathf.Max(1, newDmgAmount);
-                    armor.TakeDamage(new DamageInfo(def, Mathf.CeilToInt(armorDamage)));
+                    // Hard armor takes damage as reduced by damage resistance and impervious to low-penetration attacks
+                    armor.TakeDamage(new DamageInfo(def, Mathf.CeilToInt(newDmgAmount)));
                 }
             }
 
